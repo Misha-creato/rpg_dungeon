@@ -64,21 +64,20 @@ class Interface:
         time.sleep(1)
         print(f'Character {character.__class__.__name__} died...')
 
-    def print_start_game(self, characters: list):
-        print('Hello!')
-        characters_name = [character.__class__.__name__ for character in characters]
-        print(f'Your characters: {characters_name}')
+    def print_start_game(self):
+        time.sleep(0.5)
+        print('Hello! Welcome to RPG Dungeon game!')
 
     def print_main_loop_info(self, monsters_quantity: int):
-        time.sleep(0.5)
+        time.sleep(1)
         print(f'You meet {monsters_quantity} monsters on your way!')
 
     def print_characters_turn(self):
-        time.sleep(0.5)
+        time.sleep(1)
         print('Characters are ready for fight!!!')
 
     def print_monsters_turn(self):
-        time.sleep(0.5)
+        time.sleep(1)
         print('Beware! Monsters are going to attack!!!')
 
     def print_use_simple_attack(self, attacking: Character | Monster, victim: Character | Monster, damage: int):
@@ -90,6 +89,6 @@ class Interface:
         print(f'{message}')
 
     def print_end_game(self, message_key: str):
-        time.sleep(0.5)
+        time.sleep(1)
         message = self.end_messages[message_key]
         print(message)
