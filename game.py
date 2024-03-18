@@ -1,12 +1,13 @@
 import random
 import sys
-from characters import Character, Priest
-from monster import Monster
+from characters import Character
+from monsters import Monster
 from interface import Interface
 from constants import (
     MIN_MONSTERS_QUANTITY,
     MAX_MONSTERS_QUANTITY,
-    MONSTERS_INFO
+    CHARACTERS_CLASSES,
+    MONSTERS_CLASSES,
 )
 
 
@@ -16,10 +17,9 @@ class Game:
     monster: Monster | None = None  # check dict or monster class
     character: Character | None = None
     interface: Interface = Interface()
-    ability_message: str
 
     def set_characters(self):
-        characters_classes = [cls() for cls in Character.__subclasses__()]
+        characters_classes = [cls() for cls in CHARACTERS_CLASSES]
         characters_keys_range = range(1, len(characters_classes) + 1)
         characters_keys = [str(key) for key in characters_keys_range]
         characters = dict(zip(characters_keys, characters_classes))
@@ -29,15 +29,10 @@ class Game:
         monsters_quantity = random.randint(a=MIN_MONSTERS_QUANTITY, b=MAX_MONSTERS_QUANTITY)
         monsters_keys_range = range(1, monsters_quantity + 1)
         monsters_keys = [str(key) for key in monsters_keys_range]
-        random_monsters = []
-        random_monsters_info = random.choices(population=MONSTERS_INFO, k=monsters_quantity)
+        random_monsters_classes = random.choices(population=MONSTERS_CLASSES, k=monsters_quantity)
+        random_monsters = [cls() for cls in random_monsters_classes]
 
-        for monster_info in random_monsters_info: # how to get random monsters
-            random_monsters.append(Monster(**monster_info))
-
-        monsters = dict(zip(monsters_keys, random_monsters))
-
-        self.monsters = monsters
+        self.monsters = dict(zip(monsters_keys, random_monsters))
 
     def choose_character(self, available_characters: dict):
 
@@ -53,24 +48,24 @@ class Game:
 
         self.character.is_blocked = True
 
-    def filter_characters(self, pair: tuple):
-        key, value = pair
-        if value.is_blocked:
-            return False
-        return True
-
     def character_move(self, player_choice: str):
         if player_choice == '1':
             self.use_simple_attack(attacking=self.character, victim=self.monster)
         elif player_choice == '2':
             self.use_ability()
-            self.interface.print_use_ability(message=self.ability_message)
         else:
             self.end(message_key='exit')
 
     def characters_turn(self):
         self.interface.print_characters_turn()
         available_characters = self.characters
+
+        def filter_characters(pair: tuple):
+            key, value = pair
+            if value.is_blocked:
+                return False
+            return True
+
         while available_characters and self.monsters:
             self.choose_monster()
             self.choose_character(
@@ -84,21 +79,24 @@ class Game:
             self.character_move(
                 player_choice=player_choice
             )
-            self.is_monster_alive()
-            available_characters = dict(filter(self.filter_characters, available_characters.items()))
+            self.update_dead_monsters()
+            available_characters = dict(filter(filter_characters, available_characters.items()))
 
-    def is_character_alive(self):
+    def control_character_death(self):
         if not self.character.is_alive:
-            self.interface.print_character_dead(name=self.character.__class__.__name__)
+            self.interface.print_character_dead(character=self.character)
             self.end(message_key='dead')
 
-    def is_monster_alive(self):
+    def update_dead_monsters(self):
         dead_monsters = []
         for key, monster in self.monsters.items():
             if not monster.is_alive:
                 dead_monsters.append(key)
                 self.characters_increase_mana()
-                self.interface.print_monster_dead(name=monster, mana_points=self.character.increase_mana_points)
+                self.interface.print_monster_dead(
+                    monster=monster,
+                    mana_points=self.character.increase_mana_points
+                )
         for monster in dead_monsters:
             self.monsters.pop(monster)
 
@@ -116,7 +114,7 @@ class Game:
             self.character = random.choice(list(self.characters.values()))
             self.monster = monster
             self.use_simple_attack(attacking=self.monster, victim=self.character)
-            self.is_character_alive()
+            self.control_character_death()
 
     def choose_monster(self):
         player_choice = self.interface.get_player_choice(
@@ -150,7 +148,7 @@ class Game:
     def use_simple_attack(self, attacking: Character | Monster, victim: Character | Monster):
         damage = attacking.attack
         victim.decrease_hp(damage=damage)
-        self.interface.print_simple_attack(attacking=attacking, victim=victim, damage=damage)
+        self.interface.print_use_simple_attack(attacking=attacking, victim=victim, damage=damage)
 
     def use_ability(self):
         required_arguments = self.character.ability.__annotations__.keys()
@@ -158,7 +156,10 @@ class Game:
         kwargs = dict(zip(required_arguments, values))
         returned_data = self.character.ability(**kwargs)
         for key, value in returned_data.items():
-            setattr(self, key, value)
+            if key == 'message':
+                self.interface.print_use_ability(message=value)
+            else:
+                setattr(self, key, value)
 
     def __str__(self):
         return f'char {self.character} mon {self.monster.hp} {self.monster.is_alive}'
