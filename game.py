@@ -57,8 +57,6 @@ class Game:
             self.end(message_key='exit')
 
     def characters_turn(self):
-        self.interface.print_characters_turn()
-        available_characters = self.characters
 
         def filter_characters(pair: tuple):
             key, value = pair
@@ -66,11 +64,14 @@ class Game:
                 return False
             return True
 
+        self.interface.print_characters_turn()
+        available_characters = self.characters
+
         while available_characters and self.monsters:
-            self.choose_monster()
             self.choose_character(
                 available_characters=available_characters,
             )
+            self.choose_monster()
             can_use_ability = bool(self.character.mana)
             player_choice = self.interface.get_player_choice(
                 message_key='move',
@@ -82,7 +83,7 @@ class Game:
             self.update_dead_monsters()
             available_characters = dict(filter(filter_characters, available_characters.items()))
 
-    def control_character_death(self):
+    def track_character_death(self):
         if not self.character.is_alive:
             self.interface.print_character_dead(character=self.character)
             self.end(message_key='dead')
@@ -114,7 +115,7 @@ class Game:
             self.character = random.choice(list(self.characters.values()))
             self.monster = monster
             self.use_simple_attack(attacking=self.monster, victim=self.character)
-            self.control_character_death()
+            self.track_character_death()
 
     def choose_monster(self):
         player_choice = self.interface.get_player_choice(
@@ -129,7 +130,7 @@ class Game:
 
     def start(self):
         self.set_characters()
-        self.interface.print_start_game(characters=list(self.characters.values()))
+        self.interface.print_start_game()
         while True:
             self.set_monsters()
             self.interface.print_main_loop_info(monsters_quantity=len(self.monsters))
@@ -160,6 +161,3 @@ class Game:
                 self.interface.print_use_ability(message=value)
             else:
                 setattr(self, key, value)
-
-    def __str__(self):
-        return f'char {self.character} mon {self.monster.hp} {self.monster.is_alive}'
