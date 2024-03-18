@@ -1,5 +1,6 @@
 import random
-from monster import Monster
+from abc import abstractmethod
+from monsters import Monster
 
 
 class Character:
@@ -18,6 +19,7 @@ class Character:
         self.max_hp = self.hp
         self.max_mana = self.mana
 
+    @abstractmethod
     def ability(self, **kwargs) -> dict:
         pass
 
@@ -40,37 +42,30 @@ class Character:
             self.hp = self.max_hp
 
     @property
+    @abstractmethod
     def ability_info(self):
         pass
-
-    def __str__(self):
-        return (f'{self.__class__.__name__} '
-                f'[HP: {self.hp} ATTACK: {self.attack} MANA: {self.mana}'
-                f' ABILITY: {self.ability_info}]')
 
 
 class Wizard(Character):
 
+    hp = 45
+    mana = 50
+    attack = 7
+    decrease_mana_points = 10
+    ability_name = 'fireball'
     ability_damage_min: int = 10
     ability_damage_max: int = 25
-
-    def __init__(self):
-        self.hp = 45
-        self.mana = 50
-        self.attack = 7
-        self.decrease_mana_points = 10
-        self.ability_name = 'fireball'
-        super().__init__()
 
     def ability(self, monster: Monster):
         self.decrease_mana()
         damage = random.randint(self.ability_damage_min, self.ability_damage_max)
         monster.decrease_hp(damage=damage)
 
-        message = (f'{self.__class__.__name__} deals {monster.name} {damage} damage '
+        message = (f'{self.__class__.__name__} deals {monster.__class__.__name__} {damage} damage '
                    f'and loses {self.decrease_mana_points} mana')
 
-        return {'monster': monster, 'ability_message': message}
+        return {'monster': monster, 'message': message}
 
     @property
     def ability_info(self):
@@ -81,16 +76,13 @@ class Wizard(Character):
 
 class Paladin(Character):
 
+    hp = 70
+    mana = 30
+    attack = 12
+    decrease_mana_points = 8
+    ability_name = 'saint ground'
     ability_damage_min: int = 8
     ability_damage_max: int = 12
-
-    def __init__(self):
-        self.hp = 70
-        self.mana = 30
-        self.attack = 12
-        self.decrease_mana_points = 8
-        self.ability_name = 'saint ground'
-        super().__init__()
 
     def ability(self, monsters: dict):
         self.decrease_mana()
@@ -102,24 +94,22 @@ class Paladin(Character):
         message = (f'{self.__class__.__name__} deals {damage} damage to all monsters '
                    f'and loses {self.decrease_mana_points} mana')
 
-        return {'monsters': monsters, 'ability_message': message}
+        return {'monsters': monsters, 'message': message}
 
     @property
     def ability_info(self):
         return (f'{self.ability_name} - deals {self.ability_damage_min}-{self.ability_damage_max} damage '
                 f'to all monsters and takes {self.decrease_mana_points} mana')
 
+
 class Priest(Character):
 
+    hp = 50
+    mana = 120
+    attack = 5
+    decrease_mana_points = 10
+    ability_name = 'healing light'
     ability_heal_points: int = 20
-
-    def __init__(self):
-        self.hp = 50
-        self.mana = 120
-        self.attack = 5
-        self.decrease_mana_points = 10
-        self.ability_name = 'healing light'
-        super().__init__()
 
     def ability(self, characters: dict):
         self.decrease_mana()
@@ -129,7 +119,7 @@ class Priest(Character):
         message = (f'{self.__class__.__name__} heals all characters with {self.ability_heal_points} points'
                    f'and loses {self.decrease_mana_points} mana')
 
-        return {'characters': characters, 'ability_message': message}
+        return {'characters': characters, 'message': message}
 
     @property
     def ability_info(self):
