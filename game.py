@@ -14,7 +14,7 @@ from constants import (
 class Game:
     monsters: dict = {}
     characters: dict = {}
-    monster: Monster | None = None  # check dict or monster class
+    monster: Monster | None = None
     character: Character | None = None
     interface: Interface = Interface()
 
@@ -152,8 +152,8 @@ class Game:
         self.interface.print_use_simple_attack(attacking=attacking, victim=victim, damage=damage)
 
     def use_ability(self):
-        required_arguments = self.character.ability.__annotations__.keys()
-        values = [getattr(self, argument) for argument in required_arguments]
+        required_arguments = self.character.ability.__annotations__.keys()  # аргументы метода ability
+        values = [getattr(self, argument) for argument in required_arguments]  # значения аругментов
         kwargs = dict(zip(required_arguments, values))
         returned_data = self.character.ability(**kwargs)
         for key, value in returned_data.items():
