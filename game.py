@@ -152,9 +152,13 @@ class Game:
         self.interface.print_use_simple_attack(attacking=attacking, victim=victim, damage=damage)
 
     def use_ability(self):
-        required_arguments = self.character.ability.__annotations__.keys()  # аргументы метода ability
-        values = [getattr(self, argument) for argument in required_arguments]  # значения аругментов
+        # Получение аргументов метода способности персонажа
+        required_arguments = self.character.ability.__annotations__.keys()
+
+        # Значения для аргументов метода способности персонажа
+        values = [getattr(self, argument) for argument in required_arguments]
         kwargs = dict(zip(required_arguments, values))
+
         returned_data = self.character.ability(**kwargs)
         for key, value in returned_data.items():
             if key == 'message':
